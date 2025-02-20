@@ -1,7 +1,7 @@
 # \<Project 5\> Scrum Team
 ## Product Owner
 \<Team Thomas Copeland\>
-## Scrum Master
+## Scrum Lord
 \<Team Lucas Currie\>
 ## Developers
 - \<Team Alex Perez\>
