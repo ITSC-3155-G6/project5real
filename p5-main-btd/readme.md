@@ -2,7 +2,7 @@
 ## Product Owner
 \<Thomas Copeland\>
 ## Scrum Lord
-\<Lucas Carrie\>
+\<Lucas Currie\>
 ## Developers
 - \<Alex Perez\>
 - \<Sufian Azfar\>
