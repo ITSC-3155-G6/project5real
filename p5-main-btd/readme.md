@@ -1,9 +1,10 @@
 # \<Project Name\> Scrum Team
 ## Product Owner
-\<Team Member Name\>
-## Scrum Master
-\<Team Member Name\>
+\<Thomas Copeland\>
+## Scrum Lord
+\<Lucas Carrie\>
 ## Developers
-- \<Team Member Name\>
-- \<Team Member Name\>
-- \<Team Member Name\>
+- \<Alex Perez\>
+- \<Sufian Azfar\>
+- \<Ryan Martin\>
+- \<Jacob Y.\>
