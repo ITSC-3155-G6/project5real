@@ -237,9 +237,10 @@ app.post("/user", async function (request, response) {
     request.session.user_id = user._id;
     response.json(user);
 
-  } catch (err) {
+  } 
+  catch (err) {
     console.error("Error in /user:", err);
-    response.status(500).send("Registration failed");
+    response.status(500).send("Registration failed!");
   }
 
   // User.exists({login_name: login_name}, function (err, returnValue){
