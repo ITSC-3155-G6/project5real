@@ -12,7 +12,6 @@ import {
 import './loginRegister.css';
 import axios from 'axios';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-const bcrypt = require('bcrypt');
 
 
 /**

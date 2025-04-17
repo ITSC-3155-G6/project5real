@@ -206,14 +206,16 @@ app.post("/user", async function (request, response) {
   }
   
   if (!first_name || !last_name || !login_name || !password) {
-    return response.status(400).send("missing required field");
+    response.status(400).send("missing required field");
+    return;
   }
 
   try {
     // 2) check uniqueness
     const already = await User.exists({ login_name });
     if (already) {
-      return response.status(400).send("login_name already in use");
+      response.status(400).send("login_name already in use");
+      return;
     }
 
     // 3) generate salt + hash
@@ -416,6 +418,7 @@ app.post("/admin/login", async function (request, response) {
   //   // We got the object - return it in JSON format.
   //   response.end(JSON.stringify(user[0]));
   // });
+  return 0;
 });
 
 /**
