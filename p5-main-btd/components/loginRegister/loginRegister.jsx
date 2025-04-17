@@ -12,6 +12,8 @@ import {
 import './loginRegister.css';
 import axios from 'axios';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+const bcrypt = require('bcrypt');
+
 
 /**
  * Define TopBar, a React component of project #5
@@ -49,9 +51,7 @@ class LoginRegister extends React.Component {
     };
     handleLogin = () => {
         const currentState = JSON.stringify(this.state.user);
-        axios.post(
-            "/admin/login",
-            currentState,
+        axios.post("/admin/login",currentState,
             {
                 headers: {
                     'Content-Type': 'application/json',

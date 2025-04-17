@@ -45,6 +45,8 @@ const multer = require("multer");
 
 const processFormBody = multer({storage: multer.memoryStorage()}).single('uploadedphoto');
 
+const bcrypt = require("bcrypt");
+
 app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
 app.use(bodyParser.json());
 
@@ -163,66 +165,117 @@ app.get("/test/:p1", function (request, response) {
 /**
  * URL /user - adds a new user
  */
-app.post("/user", function (request, response) {
-  const first_name = request.body.first_name || "";
-  const last_name = request.body.last_name || "";
-  const location = request.body.location || "";
-  const description = request.body.description || "";
-  const occupation = request.body.occupation || "";
-  const login_name = request.body.login_name || "";
-  const password = request.body.password || "";
+app.post("/user", async function (request, response) {
+  // const first_name = request.body.first_name || "";
+  // const last_name = request.body.last_name || "";
+  // const location = request.body.location || "";
+  // const description = request.body.description || "";
+  // const occupation = request.body.occupation || "";
+  // const login_name = request.body.login_name || "";
+  // const password = request.body.password || "";
 
+  const {
+    first_name = "",
+    last_name  = "",
+    location   = "",
+    description= "",
+    occupation = "",
+    login_name = "",
+    password   = ""
+  } = request.body;
+  
   if (first_name === "") {
-    console.error("Error in /user", first_name);
+    console.error("Error in /user | first", first_name);
     response.status(400).send("first_name is required");
     return;
   }
   if (last_name === "") {
-    console.error("Error in /user", last_name);
+    console.error("Error in /user | last", last_name);
     response.status(400).send("last_name is required");
     return;
   }
   if (login_name === "") {
-    console.error("Error in /user", login_name);
+    console.error("Error in /user | uname", login_name);
     response.status(400).send("login_name is required");
     return;
   }
   if (password === "") {
-    console.error("Error in /user", password);
+    console.error("Error in /user | pass", password);
     response.status(400).send("password is required");
     return;
   }
+  
+  if (!first_name || !last_name || !login_name || !password) {
+    return response.status(400).send("missing required field");
+  }
 
-  User.exists({login_name: login_name}, function (err, returnValue){
-    if (err){
-      console.error("Error in /user", err);
-      response.status(500).send();
-    } else if (returnValue) {
-        console.error("Error in /user", returnValue);
-        response.status(400).send();
-      } else {
-        User.create(
-            {
-              _id: new mongoose.Types.ObjectId(),
-              first_name: first_name,
-              last_name: last_name,
-              location: location,
-              description: description,
-              occupation: occupation,
-              login_name: login_name,
-              password: password
-            })
-            .then((user) => {
-              request.session.user_id = user._id;
-              session.user_id = user._id;
-              response.end(JSON.stringify(user));
-            })
-            .catch(err1 => {
-              console.error("Error in /user", err1);
-              response.status(500).send();
-            });
-      }
-  });
+  try {
+    // 2) check uniqueness
+    const already = await User.exists({ login_name });
+    if (already) {
+      return response.status(400).send("login_name already in use");
+    }
+
+    // 3) generate salt + hash
+    const saltRounds    = 12;
+    const salt          = await bcrypt.genSalt(saltRounds);
+    const password_hash = await bcrypt.hash(password, salt);
+
+    // 4) create user with the **string** hash
+    const user = await User.create({
+      _id: new mongoose.Types.ObjectId(),
+      first_name: first_name,
+      last_name: last_name,
+      location: location,
+      description: description,
+      occupation: occupation,
+      login_name: login_name,
+      password: password_hash
+    });
+
+    // 5) stash in session & respond
+    request.session.user_id = user._id;
+    response.json(user);
+
+  } catch (err) {
+    console.error("Error in /user:", err);
+    response.status(500).send("Registration failed");
+  }
+
+  // User.exists({login_name: login_name}, function (err, returnValue){
+  //   if (err){
+  //     console.error("Error in /user | login_gen", err);
+  //     response.status(500).send();
+  //   } else if (returnValue) {
+  //       console.error("Error in /user | login_ret", returnValue);
+  //       response.status(400).send();
+  //     } else {
+  //       //setup hash
+  //       // hash the incoming password with that salt
+  //       const password_hash = bcrypt.hash(password, 10);
+
+  //       User.create(
+  //           {
+  //             _id: new mongoose.Types.ObjectId(),
+  //             first_name: first_name,
+  //             last_name: last_name,
+  //             location: location,
+  //             description: description,
+  //             occupation: occupation,
+  //             login_name: login_name,
+  //             password: password_hash //assign password hash to password field
+  //           })
+  //           .then((user) => {
+  //             request.session.user_id = user._id;
+  //             session.user_id = user._id;
+  //             response.end(JSON.stringify(user));
+  //           })
+  //           .catch(err1 => {
+  //             console.error("Error in /user", err1);
+  //             response.status(500).send();
+  //           });
+  //     }
+  // });
 });
 
 /**
@@ -314,34 +367,55 @@ app.post("/commentsOfPhoto/:photo_id", function (request, response) {
 /**
  * URL /admin/login - Returns user object on successful login
  */
-app.post("/admin/login", function (request, response) {
-  const login_name = request.body.login_name || "";
-  const password = request.body.password || "";
-  User.find(
-      {
-        login_name: login_name,
-        password: password
-      }, {__v: 0}, function (err, user) {
-    if (err) {
-      // Query returned an error. We pass it back to the browser with an
-      // Internal Service Error (500) error code.
-      console.error("Error in /admin/login", err);
-      response.status(500).send(JSON.stringify(err));
-      return;
+app.post("/admin/login", async function (request, response) {
+  const { login_name = "", password = "" } = request.body;
+  try {
+    // 1) look up the user
+    const user = await User.findOne({ login_name });
+    if (!user) {
+      return response.status(401).send("Invalid credentials");
     }
-    if (user.length === 0) {
-      // Query didn't return an error but didn't find the user object -
-      // This is also an internal error return.
-      response.status(400).send();
-      return;
+
+    // 2) compare the candidate pw to the stored hash
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return response.status(401).send("Invalid credentials");
     }
-    request.session.user_id = user[0]._id;
-    session.user_id = user[0]._id;
-    //session.user = user;
-    //response.cookie('user',user);
-    // We got the object - return it in JSON format.
-    response.end(JSON.stringify(user[0]));
-  });
+
+    // 3) success
+    request.session.user_id = user._id;
+    response.json(user);
+
+  } catch (err) {
+    console.error("Error in /admin/login:", err);
+    response.status(500).send("Login failed");
+  }
+
+  // User.find(
+  //     {
+  //       login_name: login_name,
+  //       password: password
+  //     }, {__v: 0}, function (err, user) {
+  //   if (err) {
+  //     // Query returned an error. We pass it back to the browser with an
+  //     // Internal Service Error (500) error code.
+  //     console.error("Error in /admin/login", err);
+  //     response.status(500).send(JSON.stringify(err));
+  //     return;
+  //   }
+  //   if (user.length === 0) {
+  //     // Query didn't return an error but didn't find the user object -
+  //     // This is also an internal error return.
+  //     response.status(400).send();
+  //     return;
+  //   }
+  //   request.session.user_id = user[0]._id;
+  //   session.user_id = user[0]._id;
+  //   //session.user = user;
+  //   //response.cookie('user',user);
+  //   // We got the object - return it in JSON format.
+  //   response.end(JSON.stringify(user[0]));
+  // });
 });
 
 /**
