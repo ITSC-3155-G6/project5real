@@ -51,12 +51,8 @@ class LoginRegister extends React.Component {
     };
     handleLogin = () => {
         const currentState = JSON.stringify(this.state.user);
-        axios.post("/admin/login",currentState,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
+        axios.post("/admin/login", this.state.user)
+            // { headers: {'Content-Type': 'application/json',}})
             .then((response) =>
             {
                 const user = response.data;
@@ -78,17 +74,10 @@ class LoginRegister extends React.Component {
     };
 
     handleRegister = () => {
-        if (this.state.password !== this.state.password_repeat){
-            return;
-        }
-        const currentState = JSON.stringify(this.state.user);
-        axios.post(
-            "/user/",
-            currentState,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+        const { first_name,last_name, location,description,occupation,login_name,password,password_repeat  } = this.state.user;
+        if (password !== password_repeat) return;
+        axios.post("/user", this.state.user, {
+                headers: {'Content-Type': 'application/json',}
             })
             .then((response) =>
             {
@@ -111,9 +100,22 @@ class LoginRegister extends React.Component {
             });
     };
 
-    handleChange(event){
-        this.setState((state) => {state.user[event.target.id] = event.target.value;});
-    }
+    // handleChange(event){
+    //     this.setState((state) => {
+    //       state.user[event.target.id] = event.target.value;
+    //     });
+    //   }
+      
+
+    handleChange = (event) => {
+        const { id, value } = event.target;
+        this.setState(prev => ({
+          user: {
+            ...prev.user,
+            [id]: value
+          }
+        }));
+      };
     componentDidMount() {
         //this.handleAppInfoChange();
     }
