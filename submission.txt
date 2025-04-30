@@ -1,0 +1,26 @@
+Project 8 - Submission Form
+
+Please fill in this form and submit it with your Project 8.
+
+Enter no more than 5 user stories that you did for the assignment that you would
+like to be graded on. For each story include the following information:
+
+Story number and name: 12 - Salted Passwords
+Story points: 6
+Brief description to see the story in action:
+When A user creates an account, the password that is created is salted/encoded and stored.
+When that user goes to log in again, the salt is retrived from the database and concatenated
+to the user's password. 
+
+Total Story Points:6
+
+Marketing Video URL (ensure permissions are set to public viewing):
+https://youtu.be/D8QNBeq29oM
+
+Is it OK if we post your Marketing Video URL on the class discussion forum?
+[Yes/No]
+No
+
+Any special instructions for grading (it should be easy for someone to run your
+app from a new machine):
+None
